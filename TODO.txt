@@ -1,0 +1,27 @@
+TO DO-
+
+Ali
+
+ Bayesian estimation
+ GMM
+ Kmeans accuracy function
+
+Abhilash
+
+Do whatever have been done on train dataset
+
+Aditi
+
+For fashion mnist change the value of the number of PCA components and check accuracy for Bayes Naiive Bayes and Knn
+u = PCA(xtrain,10) Line 268 Fashion.py
+for knn change value of knn also 
+line 274
+
+naiive bayes function a
+and bayes function are commented out
+
+
+
+Make report add all the figures that i posted on git
+
+
