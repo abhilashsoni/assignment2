@@ -170,7 +170,38 @@ def MultiClassLinearModel(xtrain,ytrain,x,step,xtest,ytest):
 	acc = testing(xtest,ytest,w)
 	return acc
 
-# def MulticlassLogisticModel(xtrain,ytrain,x,step,xtest,ytest):
+def MultiClassLogisticModel(xtrain,ytrain,x,step,xtest,ytest):
+	d = np.size(xtrain,axis=1)
+	m = np.size(xtrain,axis=0)
+	b = np.ones((m,1))
+	xtrain = np.hstack((b,xtrain))
+	ytrain = oneHot(ytrain,k)
+
+	w=np.random.rand(k,d+1)
+
+	fig = plt.figure()
+	i=0
+	lprev=10000
+	while(True):
+		z = np.dot(xtrain,w.transpose())
+		a=softmax(z)
+		# print a[0:10,:]
+		print np.shape(a)
+		l=MSELoss(a,ytrain)
+		l=np.sum(l)/m
+		print l
+		if(i>5000):
+			break
+		plt.scatter(i,l,color='black',s=2)
+		g = gradientForSoftmax(xtrain,ytrain,z)
+		w=w+step*g
+		lprev=l
+		i+=1
+	name = "LogisticReg_"+str(step)+".png"
+	plt.savefig(name)
+	plt.clf
+	acc = testing(xtest,ytest,w)
+	return acc
 
 def visualizingHyperPlane(x,w):
 	plt3d = plt.figure().gca(projection='3d')
@@ -206,9 +237,19 @@ def testing(xtest,ytest,w):
 
 def softmax(z):
 	a = np.exp(z)
-	s=np.sum(a)
-	a=a/s
+	s=np.sum(a,axis=1)
+	a=a/s[:,None]
 	return a
+
+def gradientForSoftmax(x,y,z):
+	a = np.exp(z)
+	print a[0:10,:]
+	s=np.sum(a,axis=1)
+	a1=a/s[:,None]
+	g = 2*(y-a1)
+	g = np.dot(g.T,x)
+	return g
+
 
 def MSELoss(z,y):
 	l = np.dot((y-z).transpose(),(y-z))
@@ -223,7 +264,7 @@ def MSEGradient(z,y,x):
 def normalize(x):
 	mean = np.mean(x,axis=0)
 	var=np.var(x,axis=0)
-	x=(x-mean)/var
+	x=(x-mean)/(var+0.000001)
 	return x
 
 def svm(xtrain,ytrain,c):
@@ -291,6 +332,8 @@ def labelForSVM(y):
 	y[ind]=-1
 	return y #Converts 0,1 labels to -1,1 labels 
 
+
+
 dtrain = genfromtxt('medicalData.txt')
 dtest = genfromtxt('medicaltest.txt')
 k = 3 # Number of classes
@@ -306,7 +349,8 @@ x = separateByclass(xtrain,ytrain,k)
 # for i in range (1,100):
 # 	print i
 # 	step = 0.001*i
-# 	acc = MultiClassLinearModel(xtrain,ytrain,x,0.001,xtest,ytest)
+acc = MultiClassLogisticModel(xtrain,ytrain,x,0.01,xtest,ytest)
+print acc
 # 	print acc
 # 	A.append(acc)
 
@@ -315,6 +359,6 @@ x = separateByclass(xtrain,ytrain,k)
 
 # plt.savefig('LinearRegressionVariationWithStepSize.png')
 
-svmOneVsAll(xtrain,ytrain,xtest,ytest,9)
+# svmOneVsAll(xtrain,ytrain,xtest,ytest,9)
 # perceptronOneVsAll(xtrain,ytrain,xtest,ytest)
 
