@@ -121,6 +121,25 @@ def perceptronOneVsAll(xtrain,ytrain,xtest,ytest):
 	b = np.ones((m,1))
 	xtrain = np.hstack((b,xtrain))
 	Z=np.zeros((k,m))
+	for i in range(0,k):
+		w = perceptron(xtrain,Ytrain[i])
+		z = np.dot(xtrain,w)
+		Z[i][:,None]=z
+	Z=Z.T
+	ycalc = np.argmax(Z,axis=1)
+	acc = calculateAccuracy(ycalc,ytrain)
+	print "Accuracy is ",acc
+
+
+
+def addPolynomialFeatures(x,p):
+	x=x[:,None]
+	a = np.copy(x)
+	X = np.copy(x)
+	for i in range(2,p+1):
+		a = a*x
+		X = np.hstack((X,a))
+	return X
 
 def Visualiztion3D(x):
 	fig=plt.figure()
@@ -169,6 +188,43 @@ def MultiClassLinearModel(xtrain,ytrain,x,step,xtest,ytest):
 	plt.clf
 	acc = testing(xtest,ytest,w)
 	return acc
+
+def LinearRegModel(xtrain,ytrain,xtest,ytest):
+	d = np.size(xtrain,axis=1)
+	m = np.size(xtrain,axis=0)
+	m1 = np.size(xtest,axis=0)
+	b = np.ones((m,1))
+	b1 = np.ones((m1,1))
+	xtrain = np.hstack((b,xtrain))
+	xtest = np.hstack((b1,xtest))
+	w=NormalEqnSoln(xtrain,ytrain)
+	z = np.dot(xtest,w)
+	err = ytest[:,None] - z
+	err = np.absolute(err)
+	plt.hist(err,bins='auto')
+	plt.show()
+	meanerr= np.mean(err)
+	return [meanerr,z]
+
+def NormalEqnSoln(x,y):
+	y=y[:,None]
+	w = np.dot(x.T,x)
+	w = np.linalg.inv(w)
+	w = np.dot(w,x.T)
+	w = np.dot(w,y)
+	return w
+
+def AddGaussianFeature(x):
+
+	m = np.size(x,axis=0)	
+	x = x[:,None]
+	var = np.var(x)
+	num = ((x-x[1])/var)**2
+	num = -1*num/2
+	num = np.exp(num)
+	return num
+
+
 
 def MultiClassLogisticModel(xtrain,ytrain,x,step,xtest,ytest):
 	d = np.size(xtrain,axis=1)
@@ -250,10 +306,12 @@ def gradientForSoftmax(x,y,z):
 	g = np.dot(g.T,x)
 	return g
 
-
 def MSELoss(z,y):
 	l = np.dot((y-z).transpose(),(y-z))
-	l = np.eye(k)*l
+	i = len(np.shape(y))
+	if(i!=1):
+		i=np.size(y,axis=1)
+	l = np.eye(i)*l
 	l = np.sum(l,axis=0)
 	return l
 
@@ -332,33 +390,61 @@ def labelForSVM(y):
 	y[ind]=-1
 	return y #Converts 0,1 labels to -1,1 labels 
 
+def MedicalData():
+# For Medical Data
+
+	dtrain = genfromtxt('medicalData.txt')
+	dtest = genfromtxt('medicaltest.txt')
+	k = 3 # Number of classes
+	N = np.size(dtrain,axis=0)
+	xtrain=dtrain[:,1:]
+	ytrain=dtrain[:,0]
+	xtest = dtest[:,1:]
+	ytest = dtest[:,0]
+
+	x = separateByclass(xtrain,ytrain,k)
+
+	# A=[]
+	# for i in range (1,100):
+	# 	print i
+	# 	step = 0.001*i
+	# acc = MultiClassLogisticModel(xtrain,ytrain,x,0.01,xtest,ytest)
+	# 	print acc
+	# 	A.append(acc)
+
+	# fig = plt.figure()
+	# plt.scatter(np.arange(100)*0.001,A,color='black',s=3)
+
+	# plt.savefig('LinearRegressionVariationWithStepSize.png')
+
+	# svmOneVsAll(xtrain,ytrain,xtest,ytest,9)
+	perceptronOneVsAll(xtrain,ytrain,xtest,ytest)
+
+def RiverData():
+	#For River Data
+
+	d = genfromtxt('river.txt')
+	m = np.size(d,axis=0)
+	dtrain = d[0:2*m/3,:]
+	dtest = d[2*m/3:,:] 
+	N = np.size(dtrain,axis=0)
+	xtrain=dtrain[:,0]
+	ytrain=dtrain[:,1]
+	xtest = dtest[:,0]
+	ytest = dtest[:,1]
+	x = np.copy(xtrain)
+	x1 = np.copy(xtest)
+	polynomial = 5
+	# gf = AddGaussianFeature(x)
+	xtrain1 =  addPolynomialFeatures(x,polynomial)
+	xtest1 = addPolynomialFeatures(x1,polynomial)
+	acc , z = LinearRegModel(xtrain1,ytrain,xtest1,ytest)
+	print "Mean error is ",acc
+	plt.scatter(np.arange(np.size(ytest,axis=0)),ytest,color='red',marker='X',s=1)
+	plt.scatter(np.arange(np.size(z,axis=0)),z,color='green',marker='o',s=1)
+	plt.savefig("PredictedVsActualRiverDataTest.png")
+	plt.show()
 
 
-dtrain = genfromtxt('medicalData.txt')
-dtest = genfromtxt('medicaltest.txt')
-k = 3 # Number of classes
-N = np.size(dtrain,axis=0)
-xtrain=dtrain[:,1:]
-ytrain=dtrain[:,0]
-xtest = dtest[:,1:]
-ytest = dtest[:,0]
-
-x = separateByclass(xtrain,ytrain,k)
-
-# A=[]
-# for i in range (1,100):
-# 	print i
-# 	step = 0.001*i
-acc = MultiClassLogisticModel(xtrain,ytrain,x,0.01,xtest,ytest)
-print acc
-# 	print acc
-# 	A.append(acc)
-
-# fig = plt.figure()
-# plt.scatter(np.arange(100)*0.001,A,color='black',s=3)
-
-# plt.savefig('LinearRegressionVariationWithStepSize.png')
-
-# svmOneVsAll(xtrain,ytrain,xtest,ytest,9)
-# perceptronOneVsAll(xtrain,ytrain,xtest,ytest)
-
+k=3
+MedicalData()
