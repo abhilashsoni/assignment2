@@ -204,7 +204,7 @@ def LinearRegModel(xtrain,ytrain,xtest,ytest):
 	plt.hist(err,bins='auto')
 	plt.show()
 	meanerr= np.mean(err)
-	return [meanerr,z]
+	return [meanerr,z,w]
 
 def NormalEqnSoln(x,y):
 	y=y[:,None]
@@ -438,13 +438,22 @@ def RiverData():
 	# gf = AddGaussianFeature(x)
 	xtrain1 =  addPolynomialFeatures(x,polynomial)
 	xtest1 = addPolynomialFeatures(x1,polynomial)
-	acc , z = LinearRegModel(xtrain1,ytrain,xtest1,ytest)
+	acc , z , w= LinearRegModel(xtrain1,ytrain,xtest1,ytest)
 	print "Mean error is ",acc
 	plt.scatter(np.arange(np.size(ytest,axis=0)),ytest,color='red',marker='X',s=1)
 	plt.scatter(np.arange(np.size(z,axis=0)),z,color='green',marker='o',s=1)
 	plt.savefig("PredictedVsActualRiverDataTest.png")
+	plt.clf()
+	xplot = np.arange(0,120,1)
+	xplot = addPolynomialFeatures(xplot,polynomial)
+	bplot = np.ones((120,1))
+	xplot = np.hstack((bplot,xplot))
+	yplot = np.dot(xplot,w)
+	plt.scatter(xtest,ytest,color='red',s=1)
+	plt.scatter(np.arange(0,120,1),yplot,color='green',s=5)
 	plt.show()
 
 
-k=3
-MedicalData()
+# k=3
+# MedicalData()
+RiverData()
